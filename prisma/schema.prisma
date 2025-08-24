@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  uuid       String     @id @default(uuid())
+  nama_role  String
+  detail     String
+  created_at DateTime   @default(now())
+  user_roles UserRole[]
+}
+
+model Users {
+  uuid          String         @id @default(uuid())
+  username      String
+  email         String         @unique
+  password      String
+  code_otp      Int
+  no_telepon    String
+  alamat        String
+  tanggal_lahir DateTime
+  user_roles    UserRole[]
+  leasing       LeasingKredit[]
+  riwayat       RiwayatKredit[]
+}
+
+model UserRole {
+  uuid       String   @id @default(uuid())
+  role_uuid  String
+  users_uuid String
+  created_at DateTime @default(now())
+
+  role  Role  @relation(fields: [role_uuid], references: [uuid])
+  users Users @relation(fields: [users_uuid], references: [uuid])
+}
+
+model TipeKendaraan {
+  uuid          String       @id @default(uuid())
+  nama_tipe     String
+  jumlah        Int
+  kendaraanList Kendaraan[]
+}
+
+model Kendaraan {
+  uuid            String         @id @default(uuid())
+  tipe_uuid       String
+  nama_kendaraan  String
+  merek_kendaraan String
+  model           String
+  transmisi       String
+  warna           String
+  cc_kendaraan    Int
+  tahun_pembuatan Int
+  detail          String
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  tipe          TipeKendaraan @relation(fields: [tipe_uuid], references: [uuid])
+  harga         Harga[]
+  leasingKredit LeasingKredit[]
+}
+
+model Harga {
+  uuid           String    @id @default(uuid())
+  kendaraan_uuid String
+  harga          Int
+  start_at       DateTime
+  end_at         DateTime
+
+  kendaraan Kendaraan @relation(fields: [kendaraan_uuid], references: [uuid])
+}
+
+model LeasingKredit {
+  uuid                          String                         @id @default(uuid())
+  kendaraan_uuid                String
+  users_uuid                    String
+  tipe_pengajuan                TipePengajuan
+  persyaratan_perusahaan_uuid   String? 
+  persyaratan_perorangan_uuid   String?
+  nominal_DP                    Int
+  tenor                         String
+  angsuran                      Int
+  status                        StatusLeasing
+  keterangan                    String?
+  created_at                    DateTime                       @default(now())
+  updated_at                    DateTime                       @updatedAt
+
+  kendaraan   Kendaraan                   @relation(fields: [kendaraan_uuid], references: [uuid])
+  users       Users                       @relation(fields: [users_uuid], references: [uuid])
+  perusahaan  PersyaratanLeasingPerusahaan? @relation(fields: [persyaratan_perusahaan_uuid], references: [uuid])
+  perorangan  PersyaratanLeasingPerorangan? @relation(fields: [persyaratan_perorangan_uuid], references: [uuid])
+}
+
+model PersyaratanLeasingPerusahaan {
+  uuid                      String          @id @default(uuid())
+  nama_perusahaan           String
+  akta_pendirian_perusahaan String
+  SIUP                      String
+  TDP                       String
+  tujuan_kendaraan          String
+  omzet_perusahaan          Int
+  leasing                   LeasingKredit[]
+}
+
+model PersyaratanLeasingPerorangan {
+  uuid            String          @id @default(uuid())
+  kartu_keluarga  String
+  ktp             String
+  gaji_perbulan   Int
+  rekening_listrik String
+  pekerjaan       String
+  foto_selfie     String
+  leasing         LeasingKredit[]
+}
+
+model RiwayatKredit {
+  uuid               String           @id @default(uuid())
+  users_uuid         String
+  tanggal_cek        DateTime
+  skor_kredit        Int
+  status_skor_kredit StatusSkorKredit
+  keterangan_biro_kredit String
+  created_at         DateTime @default(now())
+
+  users Users @relation(fields: [users_uuid], references: [uuid])
+}
+
+enum TipePengajuan {
+  perorangan
+  perusahaan
+}
+
+enum StatusLeasing {
+  menunggu_persetujuan
+  disetujui
+  ditolak
+}
+
+enum StatusSkorKredit {
+  lancar
+  dalam_perhatian_khusus
+  tidak_lancar
+}
