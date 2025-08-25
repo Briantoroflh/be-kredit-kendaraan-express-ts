@@ -23,7 +23,7 @@ CREATE TABLE "public"."Users" (
     "username" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "code_otp" INTEGER NOT NULL,
+    "code_otp" INTEGER,
     "no_telepon" TEXT NOT NULL,
     "alamat" TEXT NOT NULL,
     "tanggal_lahir" TIMESTAMP(3) NOT NULL,
@@ -39,6 +39,18 @@ CREATE TABLE "public"."UserRole" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "UserRole_pkey" PRIMARY KEY ("uuid")
+);
+
+-- CreateTable
+CREATE TABLE "public"."TokenPermission" (
+    "uuid" TEXT NOT NULL,
+    "users_uuid" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expired_at" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TokenPermission_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
@@ -140,11 +152,20 @@ CREATE TABLE "public"."RiwayatKredit" (
 -- CreateIndex
 CREATE UNIQUE INDEX "Users_email_key" ON "public"."Users"("email");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "TokenPermission_users_uuid_key" ON "public"."TokenPermission"("users_uuid");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "TokenPermission_token_key" ON "public"."TokenPermission"("token");
+
 -- AddForeignKey
 ALTER TABLE "public"."UserRole" ADD CONSTRAINT "UserRole_role_uuid_fkey" FOREIGN KEY ("role_uuid") REFERENCES "public"."Role"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."UserRole" ADD CONSTRAINT "UserRole_users_uuid_fkey" FOREIGN KEY ("users_uuid") REFERENCES "public"."Users"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."TokenPermission" ADD CONSTRAINT "TokenPermission_users_uuid_fkey" FOREIGN KEY ("users_uuid") REFERENCES "public"."Users"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Kendaraan" ADD CONSTRAINT "Kendaraan_tipe_uuid_fkey" FOREIGN KEY ("tipe_uuid") REFERENCES "public"."TipeKendaraan"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;

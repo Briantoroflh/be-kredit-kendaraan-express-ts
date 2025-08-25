@@ -17,17 +17,18 @@ model Role {
 }
 
 model Users {
-  uuid          String         @id @default(uuid())
-  username      String
-  email         String         @unique
-  password      String
-  code_otp      Int
-  no_telepon    String
-  alamat        String
-  tanggal_lahir DateTime
-  user_roles    UserRole[]
-  leasing       LeasingKredit[]
-  riwayat       RiwayatKredit[]
+  uuid              String            @id @default(uuid())
+  username          String
+  email             String            @unique
+  password          String
+  code_otp          Int?
+  no_telepon        String
+  alamat            String
+  tanggal_lahir     DateTime
+  user_roles        UserRole[]
+  leasing           LeasingKredit[]
+  riwayat           RiwayatKredit[]
+  token_permissions TokenPermission?
 }
 
 model UserRole {
@@ -40,15 +41,27 @@ model UserRole {
   users Users @relation(fields: [users_uuid], references: [uuid])
 }
 
+model TokenPermission {
+  uuid       String   @id @default(uuid())
+  users_uuid String   @unique
+  token      String   @unique
+  expired_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relasi ke Users
+  user Users @relation(fields: [users_uuid], references: [uuid])
+}
+
 model TipeKendaraan {
-  uuid          String       @id @default(uuid())
+  uuid          String      @id @default(uuid())
   nama_tipe     String
   jumlah        Int
   kendaraanList Kendaraan[]
 }
 
 model Kendaraan {
-  uuid            String         @id @default(uuid())
+  uuid            String   @id @default(uuid())
   tipe_uuid       String
   nama_kendaraan  String
   merek_kendaraan String
@@ -58,16 +71,16 @@ model Kendaraan {
   cc_kendaraan    Int
   tahun_pembuatan Int
   detail          String
-  created_at      DateTime       @default(now())
-  updated_at      DateTime       @updatedAt
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
-  tipe          TipeKendaraan @relation(fields: [tipe_uuid], references: [uuid])
+  tipe          TipeKendaraan   @relation(fields: [tipe_uuid], references: [uuid])
   harga         Harga[]
   leasingKredit LeasingKredit[]
 }
 
 model Harga {
-  uuid           String    @id @default(uuid())
+  uuid           String   @id @default(uuid())
   kendaraan_uuid String
   harga          Int
   start_at       DateTime
@@ -77,24 +90,24 @@ model Harga {
 }
 
 model LeasingKredit {
-  uuid                          String                         @id @default(uuid())
-  kendaraan_uuid                String
-  users_uuid                    String
-  tipe_pengajuan                TipePengajuan
-  persyaratan_perusahaan_uuid   String? 
-  persyaratan_perorangan_uuid   String?
-  nominal_DP                    Int
-  tenor                         String
-  angsuran                      Int
-  status                        StatusLeasing
-  keterangan                    String?
-  created_at                    DateTime                       @default(now())
-  updated_at                    DateTime                       @updatedAt
+  uuid                        String        @id @default(uuid())
+  kendaraan_uuid              String
+  users_uuid                  String
+  tipe_pengajuan              TipePengajuan
+  persyaratan_perusahaan_uuid String?
+  persyaratan_perorangan_uuid String?
+  nominal_DP                  Int
+  tenor                       String
+  angsuran                    Int
+  status                      StatusLeasing
+  keterangan                  String?
+  created_at                  DateTime      @default(now())
+  updated_at                  DateTime      @updatedAt
 
-  kendaraan   Kendaraan                   @relation(fields: [kendaraan_uuid], references: [uuid])
-  users       Users                       @relation(fields: [users_uuid], references: [uuid])
-  perusahaan  PersyaratanLeasingPerusahaan? @relation(fields: [persyaratan_perusahaan_uuid], references: [uuid])
-  perorangan  PersyaratanLeasingPerorangan? @relation(fields: [persyaratan_perorangan_uuid], references: [uuid])
+  kendaraan  Kendaraan                     @relation(fields: [kendaraan_uuid], references: [uuid])
+  users      Users                         @relation(fields: [users_uuid], references: [uuid])
+  perusahaan PersyaratanLeasingPerusahaan? @relation(fields: [persyaratan_perusahaan_uuid], references: [uuid])
+  perorangan PersyaratanLeasingPerorangan? @relation(fields: [persyaratan_perorangan_uuid], references: [uuid])
 }
 
 model PersyaratanLeasingPerusahaan {
@@ -109,24 +122,24 @@ model PersyaratanLeasingPerusahaan {
 }
 
 model PersyaratanLeasingPerorangan {
-  uuid            String          @id @default(uuid())
-  kartu_keluarga  String
-  ktp             String
-  gaji_perbulan   Int
+  uuid             String          @id @default(uuid())
+  kartu_keluarga   String
+  ktp              String
+  gaji_perbulan    Int
   rekening_listrik String
-  pekerjaan       String
-  foto_selfie     String
-  leasing         LeasingKredit[]
+  pekerjaan        String
+  foto_selfie      String
+  leasing          LeasingKredit[]
 }
 
 model RiwayatKredit {
-  uuid               String           @id @default(uuid())
-  users_uuid         String
-  tanggal_cek        DateTime
-  skor_kredit        Int
-  status_skor_kredit StatusSkorKredit
+  uuid                   String           @id @default(uuid())
+  users_uuid             String
+  tanggal_cek            DateTime
+  skor_kredit            Int
+  status_skor_kredit     StatusSkorKredit
   keterangan_biro_kredit String
-  created_at         DateTime @default(now())
+  created_at             DateTime         @default(now())
 
   users Users @relation(fields: [users_uuid], references: [uuid])
 }
