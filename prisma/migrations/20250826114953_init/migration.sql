@@ -7,6 +7,9 @@ CREATE TYPE "public"."StatusLeasing" AS ENUM ('menunggu_persetujuan', 'disetujui
 -- CreateEnum
 CREATE TYPE "public"."StatusSkorKredit" AS ENUM ('lancar', 'dalam_perhatian_khusus', 'tidak_lancar');
 
+-- CreateEnum
+CREATE TYPE "public"."StatusPembayaran" AS ENUM ('berjalan', 'lunas', 'telat');
+
 -- CreateTable
 CREATE TABLE "public"."Role" (
     "uuid" TEXT NOT NULL,
@@ -33,12 +36,11 @@ CREATE TABLE "public"."Users" (
 
 -- CreateTable
 CREATE TABLE "public"."UserRole" (
-    "uuid" TEXT NOT NULL,
     "role_uuid" TEXT NOT NULL,
     "users_uuid" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "UserRole_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "UserRole_pkey" PRIMARY KEY ("role_uuid","users_uuid")
 );
 
 -- CreateTable
@@ -97,8 +99,6 @@ CREATE TABLE "public"."LeasingKredit" (
     "kendaraan_uuid" TEXT NOT NULL,
     "users_uuid" TEXT NOT NULL,
     "tipe_pengajuan" "public"."TipePengajuan" NOT NULL,
-    "persyaratan_perusahaan_uuid" TEXT,
-    "persyaratan_perorangan_uuid" TEXT,
     "nominal_DP" INTEGER NOT NULL,
     "tenor" TEXT NOT NULL,
     "angsuran" INTEGER NOT NULL,
@@ -111,8 +111,24 @@ CREATE TABLE "public"."LeasingKredit" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."AngsuranBerjalan" (
+    "uuid" TEXT NOT NULL,
+    "leasing_kredit_uuid" TEXT NOT NULL,
+    "jumlah_angsuran_perbulan" INTEGER NOT NULL,
+    "tanggal_mulai_angsuran" TIMESTAMP(3) NOT NULL,
+    "jumlah_sudah_dibayar" INTEGER NOT NULL,
+    "sisa_angsuran_pokok" INTEGER NOT NULL,
+    "status_pembayaran" "public"."StatusPembayaran" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AngsuranBerjalan_pkey" PRIMARY KEY ("uuid")
+);
+
+-- CreateTable
 CREATE TABLE "public"."PersyaratanLeasingPerusahaan" (
     "uuid" TEXT NOT NULL,
+    "leasing_kredit_uuid" TEXT NOT NULL,
     "nama_perusahaan" TEXT NOT NULL,
     "akta_pendirian_perusahaan" TEXT NOT NULL,
     "SIUP" TEXT NOT NULL,
@@ -126,6 +142,7 @@ CREATE TABLE "public"."PersyaratanLeasingPerusahaan" (
 -- CreateTable
 CREATE TABLE "public"."PersyaratanLeasingPerorangan" (
     "uuid" TEXT NOT NULL,
+    "leasing_kredit_uuid" TEXT NOT NULL,
     "kartu_keluarga" TEXT NOT NULL,
     "ktp" TEXT NOT NULL,
     "gaji_perbulan" INTEGER NOT NULL,
@@ -180,10 +197,13 @@ ALTER TABLE "public"."LeasingKredit" ADD CONSTRAINT "LeasingKredit_kendaraan_uui
 ALTER TABLE "public"."LeasingKredit" ADD CONSTRAINT "LeasingKredit_users_uuid_fkey" FOREIGN KEY ("users_uuid") REFERENCES "public"."Users"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."LeasingKredit" ADD CONSTRAINT "LeasingKredit_persyaratan_perusahaan_uuid_fkey" FOREIGN KEY ("persyaratan_perusahaan_uuid") REFERENCES "public"."PersyaratanLeasingPerusahaan"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "public"."AngsuranBerjalan" ADD CONSTRAINT "AngsuranBerjalan_leasing_kredit_uuid_fkey" FOREIGN KEY ("leasing_kredit_uuid") REFERENCES "public"."LeasingKredit"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."LeasingKredit" ADD CONSTRAINT "LeasingKredit_persyaratan_perorangan_uuid_fkey" FOREIGN KEY ("persyaratan_perorangan_uuid") REFERENCES "public"."PersyaratanLeasingPerorangan"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "public"."PersyaratanLeasingPerusahaan" ADD CONSTRAINT "PersyaratanLeasingPerusahaan_leasing_kredit_uuid_fkey" FOREIGN KEY ("leasing_kredit_uuid") REFERENCES "public"."LeasingKredit"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."PersyaratanLeasingPerorangan" ADD CONSTRAINT "PersyaratanLeasingPerorangan_leasing_kredit_uuid_fkey" FOREIGN KEY ("leasing_kredit_uuid") REFERENCES "public"."LeasingKredit"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."RiwayatKredit" ADD CONSTRAINT "RiwayatKredit_users_uuid_fkey" FOREIGN KEY ("users_uuid") REFERENCES "public"."Users"("uuid") ON DELETE RESTRICT ON UPDATE CASCADE;

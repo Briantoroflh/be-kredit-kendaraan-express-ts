@@ -9,36 +9,39 @@ datasource db {
 }
 
 model Role {
-  uuid       String     @id @default(uuid())
+  uuid       String   @id @default(uuid())
   nama_role  String
   detail     String
-  created_at DateTime   @default(now())
-  user_roles UserRole[]
+  created_at DateTime @default(now())
+
+  userRoles UserRole[]
 }
 
 model Users {
-  uuid              String            @id @default(uuid())
-  username          String
-  email             String            @unique
-  password          String
-  code_otp          Int?
-  no_telepon        String
-  alamat            String
-  tanggal_lahir     DateTime
-  user_roles        UserRole[]
-  leasing           LeasingKredit[]
-  riwayat           RiwayatKredit[]
-  token_permissions TokenPermission?
+  uuid          String   @id @default(uuid())
+  username      String
+  email         String   @unique
+  password      String
+  code_otp      Int?
+  no_telepon    String
+  alamat        String
+  tanggal_lahir DateTime
+
+  userRoles     UserRole[]
+  tokens        TokenPermission[]
+  leasingKredit LeasingKredit[]
+  riwayat       RiwayatKredit[]
 }
 
 model UserRole {
-  uuid       String   @id @default(uuid())
   role_uuid  String
   users_uuid String
   created_at DateTime @default(now())
 
-  role  Role  @relation(fields: [role_uuid], references: [uuid])
-  users Users @relation(fields: [users_uuid], references: [uuid])
+  role Role  @relation(fields: [role_uuid], references: [uuid])
+  user Users @relation(fields: [users_uuid], references: [uuid])
+
+  @@id([role_uuid, users_uuid])
 }
 
 model TokenPermission {
@@ -49,15 +52,15 @@ model TokenPermission {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  // Relasi ke Users
   user Users @relation(fields: [users_uuid], references: [uuid])
 }
 
 model TipeKendaraan {
-  uuid          String      @id @default(uuid())
-  nama_tipe     String
-  jumlah        Int
-  kendaraanList Kendaraan[]
+  uuid      String @id @default(uuid())
+  nama_tipe String
+  jumlah    Int
+
+  kendaraan Kendaraan[]
 }
 
 model Kendaraan {
@@ -90,46 +93,63 @@ model Harga {
 }
 
 model LeasingKredit {
-  uuid                        String        @id @default(uuid())
-  kendaraan_uuid              String
-  users_uuid                  String
-  tipe_pengajuan              TipePengajuan
-  persyaratan_perusahaan_uuid String?
-  persyaratan_perorangan_uuid String?
-  nominal_DP                  Int
-  tenor                       String
-  angsuran                    Int
-  status                      StatusLeasing
-  keterangan                  String?
-  created_at                  DateTime      @default(now())
-  updated_at                  DateTime      @updatedAt
+  uuid           String        @id @default(uuid())
+  kendaraan_uuid String
+  users_uuid     String
+  tipe_pengajuan TipePengajuan
+  nominal_DP     Int
+  tenor          String
+  angsuran       Int
+  status         StatusLeasing
+  keterangan     String?
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
 
-  kendaraan  Kendaraan                     @relation(fields: [kendaraan_uuid], references: [uuid])
-  users      Users                         @relation(fields: [users_uuid], references: [uuid])
-  perusahaan PersyaratanLeasingPerusahaan? @relation(fields: [persyaratan_perusahaan_uuid], references: [uuid])
-  perorangan PersyaratanLeasingPerorangan? @relation(fields: [persyaratan_perorangan_uuid], references: [uuid])
+  kendaraan        Kendaraan                      @relation(fields: [kendaraan_uuid], references: [uuid])
+  user             Users                          @relation(fields: [users_uuid], references: [uuid])
+  perusahaan       PersyaratanLeasingPerusahaan[]
+  perorangan       PersyaratanLeasingPerorangan[]
+  angsuranBerjalan AngsuranBerjalan[]
+}
+
+model AngsuranBerjalan {
+  uuid                     String           @id @default(uuid())
+  leasing_kredit_uuid      String
+  jumlah_angsuran_perbulan Int
+  tanggal_mulai_angsuran   DateTime
+  jumlah_sudah_dibayar     Int
+  sisa_angsuran_pokok      Int
+  status_pembayaran        StatusPembayaran
+  created_at               DateTime         @default(now())
+  updated_at               DateTime         @updatedAt
+
+  leasing LeasingKredit @relation(fields: [leasing_kredit_uuid], references: [uuid])
 }
 
 model PersyaratanLeasingPerusahaan {
-  uuid                      String          @id @default(uuid())
+  uuid                      String @id @default(uuid())
+  leasing_kredit_uuid       String
   nama_perusahaan           String
   akta_pendirian_perusahaan String
   SIUP                      String
   TDP                       String
   tujuan_kendaraan          String
   omzet_perusahaan          Int
-  leasing                   LeasingKredit[]
+
+  leasingKredit LeasingKredit @relation(fields: [leasing_kredit_uuid], references: [uuid])
 }
 
 model PersyaratanLeasingPerorangan {
-  uuid             String          @id @default(uuid())
-  kartu_keluarga   String
-  ktp              String
-  gaji_perbulan    Int
-  rekening_listrik String
-  pekerjaan        String
-  foto_selfie      String
-  leasing          LeasingKredit[]
+  uuid                String @id @default(uuid())
+  leasing_kredit_uuid String
+  kartu_keluarga      String
+  ktp                 String
+  gaji_perbulan       Int
+  rekening_listrik    String
+  pekerjaan           String
+  foto_selfie         String
+
+  leasingKredit LeasingKredit @relation(fields: [leasing_kredit_uuid], references: [uuid])
 }
 
 model RiwayatKredit {
@@ -141,7 +161,7 @@ model RiwayatKredit {
   keterangan_biro_kredit String
   created_at             DateTime         @default(now())
 
-  users Users @relation(fields: [users_uuid], references: [uuid])
+  user Users @relation(fields: [users_uuid], references: [uuid])
 }
 
 enum TipePengajuan {
@@ -159,4 +179,10 @@ enum StatusSkorKredit {
   lancar
   dalam_perhatian_khusus
   tidak_lancar
+}
+
+enum StatusPembayaran {
+  berjalan
+  lunas
+  telat
 }

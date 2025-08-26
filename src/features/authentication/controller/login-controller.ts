@@ -67,5 +67,5 @@ export const LoginController = async (req: Request, res: Response) => {
     await insertToken(uuid, token, exp);
   }
 
-  return res.status(200).json(successResponse(loginResult.message, { token }));
+  return res.status(200).json(successResponse(loginResult.message, { uuid, token }));
 };

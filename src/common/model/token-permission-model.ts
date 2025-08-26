@@ -1,7 +1,7 @@
 import prisma from "../../config/prisma"
 
 export const getTokenByUsersUuid = async (uuid:string) => {
-    return prisma.tokenPermission.findUnique({
+    return prisma.tokenPermission.findFirst({
         where:{
             users_uuid: uuid
         }
@@ -22,7 +22,7 @@ export const updateToken = async (uuid: string, token: string, expAt: number) =>
     const expDate = date.toISOString()
 
     return prisma.tokenPermission.update({
-        where:{
+        where: {
             users_uuid: uuid
         },
         data:{
