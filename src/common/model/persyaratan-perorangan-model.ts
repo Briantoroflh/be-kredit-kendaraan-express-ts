@@ -10,6 +10,21 @@ export const getPersyaratanByKreditUsers = async (uuid: string) => {
     }})
 }
 
+export const getKendaraanByKreditUsers = async (uuid: string) => {
+    return await prisma.persyaratanLeasingPerorangan.findMany({
+        where: {
+            leasing_kredit_uuid: uuid
+        },
+        include: {
+            leasingKredit: {
+               select: {
+                   kendaraan_uuid: true
+               }
+            }
+        }
+    });
+}
+
 export const AddPersyaratanPerorangan = async (
     leasingKreditUuid: string,
     kartuKeluarga: string,

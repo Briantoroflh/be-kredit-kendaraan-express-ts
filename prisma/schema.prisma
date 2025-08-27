@@ -98,7 +98,7 @@ model LeasingKredit {
   users_uuid     String
   tipe_pengajuan TipePengajuan
   nominal_DP     Int
-  tenor          String
+  tenor          DateTime
   angsuran       Int
   status         StatusLeasing
   keterangan     String?
@@ -117,6 +117,7 @@ model AngsuranBerjalan {
   leasing_kredit_uuid      String
   jumlah_angsuran_perbulan Int
   tanggal_mulai_angsuran   DateTime
+  lunas_sebelum            DateTime
   jumlah_sudah_dibayar     Int
   sisa_angsuran_pokok      Int
   status_pembayaran        StatusPembayaran

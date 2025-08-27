@@ -7,8 +7,12 @@ import { getKendaraanByUuid } from "../../../common/model/kendaraan-model";
 import { KreditLeasingService } from "../services/kredit-leasing-service";
 import { StatusLeasing, TipePengajuan } from "../../../generated/prisma";
 import {AddAngsuranBerjalan, getAngsuranByUsersUuid} from "../../../common/model/angsuran-berjalan-model";
-import {getKreditByUsersUuid} from "../../../common/model/kredit-leasing-model";
-import {getHargaByKendaraanUuid} from "../../../common/model/harga-model";
+import {
+  getKreditByUsersUuid,
+  getKreditByUuid,
+  UpdateStatusKreditLeasing
+} from "../../../common/model/kredit-leasing-model";
+import {differenceInMonths}  from 'date-fns'
 
 export const KreditLeasingController = async (req: Request, res: Response) => {
   const data: {
@@ -61,11 +65,6 @@ export const KreditLeasingController = async (req: Request, res: Response) => {
     return res.status(404).json(errorsResponse("Kendaraan tidak di temukan!"));
   }
 
-  const harga = await getHargaByKendaraanUuid(data.kendaraanUuid);
-  if(!harga) {
-    return  res.status(404).json(errorsResponse("Harga tidak di temukan!"))
-  }
-
   const kreditResult = await KreditLeasingService(
     data.kendaraanUuid,
     data.usersUuid,
@@ -76,12 +75,6 @@ export const KreditLeasingController = async (req: Request, res: Response) => {
     data.status,
     data.keterangan
   );
-
-  const { uuid } = await getKreditByUsersUuid(data.usersUuid.toString())
-  const totalPinjaman = harga.harga - data.nominalDP; // kendaraan.harga is the vehicle price
-  const sisaAngsuran = totalPinjaman;
-
-  await  AddAngsuranBerjalan(uuid, data.angsuran, data.nominalDP, sisaAngsuran, "berjalan");
 
   if(!kreditResult.success){
     return res.status(400).json(errorsResponse(kreditResult.message))
@@ -104,4 +97,17 @@ export const getAllKreditUsers = async (req: Request, res: Response) => {
   }
 
   return res.status(200).json(successResponse("Angsuran di temukan!", KreditUsers));
+}
+
+export const UpdateStatusApproved = async (req: Request, res: Response) => {
+  const { uuid } = req.params;
+
+  const kredit = await getKreditByUuid(uuid);
+  if(!kredit) {
+    return res.status(404).json(errorsResponse("Kredit tidak di temukan!"));
+  }
+
+  await UpdateStatusKreditLeasing(kredit.uuid, StatusLeasing.disetujui);
+
+  return  res.status(200).json(successResponse("Kredit telah di setujui!", kredit));
 }

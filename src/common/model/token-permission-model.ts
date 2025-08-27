@@ -1,11 +1,19 @@
 import prisma from "../../config/prisma"
 
 export const getTokenByUsersUuid = async (uuid:string) => {
-    return prisma.tokenPermission.findFirst({
+    return await prisma.tokenPermission.findFirst({
         where:{
             users_uuid: uuid
         }
     })
+}
+
+export const getSingleToken = async  (token: string) => {
+    return await prisma.tokenPermission.findFirst({where: {
+        token: token
+        }, select: {
+        token: true
+        }})
 }
 
 export const insertToken = async (uuid: string, token: string, expAt: number) => {
